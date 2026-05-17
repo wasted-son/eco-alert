@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoAlert — Community Environmental Map</title>
+
+  <!-- Leaflet Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════ HEADER ═══════════════════════ -->
+  <header id="app-header">
+    <div class="header-brand">
+      <div class="brand-icon">🌍</div>
+      <div class="brand-text">
+        <span class="brand-name">EcoAlert</span>
+        <span class="brand-tagline">Community Crisis Map</span>
+      </div>
+    </div>
+
+    <div class="header-stats">
+      <div class="stat-pill">
+        <span class="stat-label">Reports</span>
+        <span class="stat-value" id="count-total">—</span>
+      </div>
+      <div class="stat-pill critical">
+        <span class="stat-label">Critical</span>
+        <span class="stat-value" id="count-critical">—</span>
+      </div>
+      <div class="stat-pill moderate">
+        <span class="stat-label">Moderate</span>
+        <span class="stat-value" id="count-moderate">—</span>
+      </div>
+      <div class="stat-pill resolved">
+        <span class="stat-label">Resolved</span>
+        <span class="stat-value" id="count-resolved">—</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-weather" id="btn-weather-toggle">☁️ Weather</button>
+      <button class="btn-admin"   id="btn-admin-toggle">🔐 Admin</button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════ MAP ═══════════════════════ -->
+  <div id="map-container">
+    <div id="map"></div>
+
+    <!-- GPS overlay -->
+    <div id="gps-overlay" class="overlay-panel">
+      <div class="overlay-spinner"></div>
+      <p>Detecting your location…</p>
+    </div>
+
+    <!-- Weather card -->
+    <div id="weather-card" class="hidden">
+      <div class="weather-header">
+        <span id="weather-city">—</span>
+        <button id="weather-close" class="close-btn">✕</button>
+      </div>
+      <div class="weather-body">
+        <div class="weather-main">
+          <span id="weather-icon" class="weather-emoji">🌤️</span>
+          <span id="weather-temp">—</span>
+        </div>
+        <div class="weather-details">
+          <div class="wd-item"><span>💧</span> <span id="weather-humidity">—</span></div>
+          <div class="wd-item"><span>💨</span> <span id="weather-wind">—</span></div>
+          <div class="wd-item"><span>👁️</span> AQI <span id="weather-aqi">—</span></div>
+        </div>
+        <div id="weather-alert" class="weather-alert hidden"></div>
+      </div>
+    </div>
+
+    <!-- FAB -->
+    <button id="fab-report" class="fab">
+      <span class="fab-icon">＋</span>
+      <span class="fab-label">Report Issue</span>
+    </button>
+
+    <!-- Legend -->
+    <div id="map-legend">
+      <div class="legend-title">LEGEND</div>
+      <div class="legend-item"><span class="dot critical"></span> Critical</div>
+      <div class="legend-item"><span class="dot moderate"></span> Moderate</div>
+      <div class="legend-item"><span class="dot resolved"></span> Resolved</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ REPORT MODAL ═══════════════════ -->
+  <div id="report-modal" class="modal hidden">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>📍 New Environmental Report</h2>
+        <button class="close-btn" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Step 1: Category -->
+        <div class="form-section">
+          <label class="form-label">1. What did you spot?</label>
+          <div class="category-grid" id="category-grid"></div>
+        </div>
+
+        <!-- Step 2: Photo -->
+        <div class="form-section">
+          <label class="form-label">2. Add a photo <span class="optional">(optional)</span></label>
+          <div class="photo-upload-area" id="photo-area">
+            <input type="file" id="photo-input" accept="image/*" capture="environment" hidden />
+            <div class="photo-placeholder" id="photo-placeholder">
+              <span class="photo-icon">📷</span>
+              <span>Tap to snap or upload</span>
+            </div>
+            <img id="photo-preview" class="hidden" alt="Preview" />
+          </div>
+        </div>
+
+        <!-- Step 3: Description -->
+        <div class="form-section">
+          <label class="form-label">3. Describe the issue</label>
+          <textarea id="report-description" class="form-textarea"
+            placeholder="What's happening? How bad is it? Any hazard nearby?"
+            maxlength="300" rows="3"></textarea>
+          <div class="char-count"><span id="char-remaining">300</span> chars left</div>
+        </div>
+
+        <!-- Location -->
+        <div class="form-section">
+          <label class="form-label">📌 Location (auto-tagged)</label>
+          <div class="location-display">
+            <div class="loc-dot pulsing"></div>
+            <span id="location-text">Acquiring GPS…</span>
+          </div>
+          <div class="location-note">You can also tap on the map to pin the exact spot</div>
+        </div>
+
+        <!-- Submit -->
+        <button id="btn-submit-report" class="btn-submit" disabled>
+          <span id="submit-label">Submit Report</span>
+          <span id="submit-spinner" class="hidden">Submitting…</span>
+        </button>
+
+        <div id="submit-success" class="success-banner hidden">
+          ✅ Report submitted! Your pin will appear on the map now.
+        </div>
+        <div id="submit-error" class="error-banner hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ ADMIN MODAL ═══════════════════ -->
+  <div id="admin-modal" class="modal hidden">
+    <div class="modal-backdrop" id="admin-backdrop"></div>
+    <div class="modal-box modal-box--admin">
+      <div class="modal-header">
+        <h2>🔐 Admin Panel</h2>
+        <button class="close-btn" id="admin-close">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- LOGIN SECTION — toggled by admin.js -->
+        <div id="admin-login-section">
+          <div class="form-section">
+            <label class="form-label">Admin Password</label>
+            <input type="password" id="admin-password" class="form-input"
+              placeholder="Enter your admin password" autocomplete="current-password" />
+          </div>
+          <button class="btn-submit" id="btn-admin-login">Login</button>
+          <div id="admin-error" class="error-banner hidden"></div>
+        </div>
+
+        <!-- ADMIN PANEL — toggled by admin.js after login -->
+        <div id="admin-panel" class="hidden">
+          <div class="admin-panel-header">
+            <h3>Active Reports</h3>
+            <button class="btn-logout" id="btn-logout">Logout</button>
+          </div>
+          <div id="admin-reports-list" class="admin-reports">
+            <p class="no-reports">Loading…</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PIN DETAIL ═══════════════════ -->
+  <div id="pin-detail" class="pin-detail-panel hidden">
+    <button class="close-btn pin-close" id="pin-close">✕</button>
+    <div class="pin-detail-body" id="pin-detail-body"></div>
+  </div>
+
+  <!-- Scripts — order matters -->
+  <script src="config.js"></script>
+  <script src="map.js"></script>
+  <script src="report.js"></script>
+  <script src="weather.js"></script>
+  <script src="realtime.js"></script>
+  <script src="admin.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

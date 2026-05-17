@@ -33,6 +33,10 @@ app.use(cors({
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
+// ── STATIC FILES (FRONTEND) ──────────────────────────────
+// Serve frontend files from public folder
+app.use(express.static('public'));
+
 // ── RATE LIMITING ─────────────────────────────────────────
 const submitLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
@@ -47,9 +51,26 @@ app.use('/api/reports', submitLimiter, reportsRouter);
 app.use('/api/admin',   adminRouter);
 app.use('/api',         weatherRouter);
 
+// ── SERVE SPA (Single Page App) ──────────────────────────
+// For any non-API route, serve index.html to enable SPA routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+    if (err) res.status(404).json({ error: 'Frontend not found' });
+  });
+});
+
 // ── HEALTH CHECK ──────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'EcoAlert API' });
+});
+
+// ── CONFIG ENDPOINT (for frontend) ────────────────────────
+// Frontend can fetch this to get the correct API URL
+app.get('/api/config', (req, res) => {
+  res.json({
+    apiBase: `${req.protocol}://${req.get('host')}`,
+    environment: process.env.NODE_ENV || 'development',
+  });
 });
 
 // ── 404 ───────────────────────────────────────────────────

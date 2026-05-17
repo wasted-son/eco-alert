@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: eco-alert-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: OPENWEATHER_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false
