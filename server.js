@@ -33,6 +33,10 @@ app.use(cors({
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
+// ── CORS PRE-FLIGHT ───────────────────────────────────────
+// Make sure OPTIONS requests for all routes are handled.
+app.options('*', cors());
+
 // ── STATIC FILES (FRONTEND) ──────────────────────────────
 // Serve frontend files from public folder
 app.use(express.static('public'));
@@ -51,14 +55,6 @@ app.use('/api/reports', submitLimiter, reportsRouter);
 app.use('/api/admin',   adminRouter);
 app.use('/api',         weatherRouter);
 
-// ── SERVE SPA (Single Page App) ──────────────────────────
-// For any non-API route, serve index.html to enable SPA routing
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
-    if (err) res.status(404).json({ error: 'Frontend not found' });
-  });
-});
-
 // ── HEALTH CHECK ──────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'EcoAlert API' });
@@ -69,7 +65,23 @@ app.get('/health', (req, res) => {
 app.get('/api/config', (req, res) => {
   res.json({
     apiBase: `${req.protocol}://${req.get('host')}`,
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV || 'production',
+  });
+});
+
+// ── API METHOD GUARD ─────────────────────────────────────
+app.all('/api/*', (req, res, next) => {
+  if (['GET', 'POST', 'PATCH', 'OPTIONS'].includes(req.method)) {
+    return next();
+  }
+  res.status(405).json({ error: `Method ${req.method} not allowed` });
+});
+
+// ── SERVE SPA (Single Page App) ──────────────────────────
+// For any non-API route, serve index.html to enable SPA routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+    if (err) res.status(404).json({ error: 'Frontend not found' });
   });
 });
 
@@ -110,11 +122,11 @@ async function validateSupabaseStartup() {
 // what is and isn't configured.
 function printStartupStatus() {
   const checks = {
-    'Supabase URL':      process.env.SUPABASE_URL && process.env.SUPABASE_URL !== 'https://your-project-id.supabase.co',
-    'Supabase Key':      process.env.SUPABASE_SERVICE_KEY && process.env.SUPABASE_SERVICE_KEY !== 'your_supabase_service_role_key_here',
-    'OpenWeather Key':   process.env.OPENWEATHER_KEY && process.env.OPENWEATHER_KEY !== 'your_openweather_api_key_here',
-    'Admin Password':    process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD !== 'change_this_to_a_strong_password',
-    'JWT Secret':        process.env.JWT_SECRET && process.env.JWT_SECRET !== 'change_this_to_a_random_64char_string_12345678901234567890',
+    'Supabase URL':      process.env.SUPABASE_URL && process.env.SUPABASE_URL !== https://bvjjanatrbhpdiawtnvw.supabase.co',
+    'Supabase Key':      process.env.SUPABASE_SERVICE_KEY && process.env.SUPABASE_SERVICE_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2amphbmF0cmJocGRpYXd0bnZ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk2ODM1OCwiZXhwIjoyMDk0NTQ0MzU4fQ.udBad2Keu_lFI3k4fL4dsK9_9-W1N-oOxyEk2SNFjos',
+    'OpenWeather Key':   process.env.OPENWEATHER_KEY && process.env.OPENWEATHER_KEY !== 'ce5673bc9ca3977c03a6c71931423f69',
+    'Admin Password':    process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD !== 'AdminPassword123!',
+    'JWT Secret':        process.env.JWT_SECRET && process.env.JWT_SECRET !== '7wVnSdSyjtWOgMZZJstCbIqnMS9kRpq6Srt1VRIwrgfnsfFRN9Gmv7hviAV0vGJEnM27jLzdqZDQeR3mLbq5kQ==',
   };
 
   console.log('\n┌─────────────────────────────────────────┐');
