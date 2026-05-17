@@ -37,22 +37,11 @@ let CONFIG = {
 };
 
 // ── AUTO-DETECT API URL ON DEPLOYMENT ──────────────────
-// Fetch the correct API URL from the server
+// On production (not localhost), use the current domain as API base
 // This allows the app to work on any deployment without manual config changes
-(async () => {
-  try {
-    // Only fetch if we're not on localhost (i.e., on production/Render)
-    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    if (isProduction) {
-      const response = await fetch('/api/config', { timeout: 2000 });
-      if (response.ok) {
-        const data = await response.json();
-        CONFIG.API_BASE = data.apiBase;
-        console.log('[CONFIG] Auto-detected API URL:', CONFIG.API_BASE);
-      }
-    }
-  } catch (err) {
-    console.warn('[CONFIG] Could not auto-detect API URL, using default:', CONFIG.API_BASE);
-  }
-  Object.freeze(CONFIG);
-})();
+if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  CONFIG.API_BASE = `${window.location.protocol}//${window.location.host}`;
+  console.log('[CONFIG] Using production API URL:', CONFIG.API_BASE);
+}
+
+Object.freeze(CONFIG);
