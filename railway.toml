@@ -1,0 +1,18 @@
+# ═══════════════════════════════════════════════════════
+#  EcoAlert — Railway Deployment Config
+#  Railway is FREE (no card needed, GitHub login only)
+#  https://railway.app
+# ═══════════════════════════════════════════════════════
+
+# This file tells Railway how to build and run the app.
+# Place it in the ROOT of your repo (eco-alert/).
+
+[build]
+buildCommand = "cd backend && npm install"
+
+[deploy]
+startCommand = "cd backend && node server.js"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
