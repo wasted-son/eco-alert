@@ -18,6 +18,9 @@ const weatherRouter = require('./routes/weather');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// Common allowed HTTP methods for the API
+const ALLOWED_API_METHODS = ['GET', 'POST', 'PATCH', 'OPTIONS', 'PUT', 'DELETE', 'HEAD'];
+
 // ── CORS ─────────────────────────────────────────────────
 // Dev: allow ALL origins so frontend (file:// or any port)
 //      can call the backend freely.
@@ -25,7 +28,7 @@ const PORT = process.env.PORT || 3000;
 const isProd = process.env.NODE_ENV === 'production';
 app.use(cors({
   origin: isProd ? (process.env.ALLOWED_ORIGIN || '*') : '*',
-  methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+  methods: ALLOWED_API_METHODS,
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
@@ -70,10 +73,18 @@ app.get('/api/config', (req, res) => {
 });
 
 // ── API METHOD GUARD ─────────────────────────────────────
+// Simple request logger for debugging unexpected 4xx/5xx
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
 app.all('/api/*', (req, res, next) => {
-  if (['GET', 'POST', 'PATCH', 'OPTIONS'].includes(req.method)) {
+  if (ALLOWED_API_METHODS.includes(req.method)) {
     return next();
   }
+  // Per HTTP spec, HEAD responses should not include a body.
+  if (req.method === 'HEAD') return res.status(405).end();
   res.status(405).json({ error: `Method ${req.method} not allowed` });
 });
 
@@ -122,7 +133,7 @@ async function validateSupabaseStartup() {
 // what is and isn't configured.
 function printStartupStatus() {
   const checks = {
-    'Supabase URL':      process.env.SUPABASE_URL && process.env.SUPABASE_URL !== https://bvjjanatrbhpdiawtnvw.supabase.co',
+    'Supabase URL':      process.env.SUPABASE_URL && process.env.SUPABASE_URL !== 'https://bvjjanatrbhpdiawtnvw.supabase.co',
     'Supabase Key':      process.env.SUPABASE_SERVICE_KEY && process.env.SUPABASE_SERVICE_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2amphbmF0cmJocGRpYXd0bnZ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk2ODM1OCwiZXhwIjoyMDk0NTQ0MzU4fQ.udBad2Keu_lFI3k4fL4dsK9_9-W1N-oOxyEk2SNFjos',
     'OpenWeather Key':   process.env.OPENWEATHER_KEY && process.env.OPENWEATHER_KEY !== 'ce5673bc9ca3977c03a6c71931423f69',
     'Admin Password':    process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD !== 'AdminPassword123!',
