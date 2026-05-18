@@ -803,13 +803,102 @@ html, body {
 .leaflet-popup-tip { background: var(--surface) !important; }
 
 /* ═══ RESPONSIVE ═══ */
+@media (max-width: 680px) {
+  #app-header {
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 56px;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .header-brand {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .brand-name { font-size: 16px; }
+  .brand-tagline { display: none; }
+
+  .header-stats {
+    order: 2;
+    width: 100%;
+    gap: 6px;
+    padding-bottom: 6px;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .header-actions {
+    order: 3;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .btn-weather, .btn-admin {
+    flex: 1 1 auto;
+    min-width: 100px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  #map-container { top: 72px; }
+  #weather-card {
+    left: 8px;
+    right: 8px;
+    width: calc(100% - 16px);
+    min-width: auto;
+    top: 16px;
+  }
+
+  .fab {
+    right: 16px;
+    left: auto;
+    bottom: 16px;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border-radius: 50%;
+    transform: none;
+  }
+
+  .fab-label { display: none; }
+  .fab-icon { font-size: 24px; }
+
+  #map-legend {
+    bottom: 110px;
+    right: 8px;
+    max-width: 180px;
+  }
+
+  .modal-box {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .modal-body { padding: 16px; }
+  .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .photo-upload-area { min-height: 120px; padding: 16px; }
+  .form-textarea, .form-input { font-size: 14px; padding: 12px; }
+  .btn-submit { padding: 16px; font-size: 15px; }
+  .pin-detail-panel {
+    left: 8px;
+    right: 8px;
+    bottom: 90px;
+    width: auto;
+    max-width: none;
+    max-height: 55vh;
+  }
+  .pin-actions { flex-direction: column; }
+  .btn-confirm, .btn-resolve { width: 100%; }
+}
+
 @media (max-width: 480px) {
   .header-stats { gap: 5px; }
-  .stat-pill { min-width: 55px; padding: 3px 8px; }
-  .brand-tagline { display: none; }
-  .fab-label { display: none; }
-  .fab { padding: 14px 20px; border-radius: 50%; width: 56px; height: 56px; }
-  .fab-icon { font-size: 24px; }
-  .category-grid { grid-template-columns: repeat(3, 1fr); }
-  #map-legend { bottom: 80px; }
+  .stat-pill { min-width: 52px; padding: 3px 8px; }
+  .btn-weather, .btn-admin { min-width: 90px; padding: 10px; }
+  .pin-detail-panel { bottom: 80px; }
+  #map-legend { bottom: 130px; right: 8px; }
 }
