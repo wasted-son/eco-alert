@@ -29,10 +29,26 @@ const ALLOWED_API_METHODS = ['GET', 'POST', 'PATCH', 'OPTIONS', 'PUT', 'DELETE',
 // ── CORS ─────────────────────────────────────────────────
 // Dev: allow ALL origins so frontend (file:// or any port)
 //      can call the backend freely.
-// Prod: set ALLOWED_ORIGIN env var to lock down.
+// Prod: allow ALLOWED_ORIGIN plus any private/local network origin.
 const isProd = process.env.NODE_ENV === 'production';
+const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
+const privateHostRegex = /^(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/;
 app.use(cors({
-  origin: isProd ? (process.env.ALLOWED_ORIGIN || '*') : '*',
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (!isProd) return callback(null, true);
+    if (allowedOrigin === '*') return callback(null, true);
+    if (origin === allowedOrigin) return callback(null, true);
+    try {
+      const hostname = new URL(origin).hostname;
+      if (privateHostRegex.test(hostname)) {
+        return callback(null, true);
+      }
+    } catch {
+      // Invalid origin format
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
   methods: ALLOWED_API_METHODS,
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -109,12 +125,28 @@ startServer();
 async function startServer() {
   await validateSupabaseStartup();
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log('\n🌍 EcoAlert API  →  http://localhost:' + PORT);
+    console.log('   Local network →  http://' + getLocalNetworkAddress() + ':' + PORT);
     console.log('   Health check  →  http://localhost:' + PORT + '/health');
     console.log('   Open frontend →  open frontend/index.html in your browser\n');
     printStartupStatus();
   });
+}
+
+function getLocalNetworkAddress() {
+  const os = require('os');
+  const ifaces = os.networkInterfaces();
+  for (const name of Object.keys(ifaces)) {
+    for (const iface of ifaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        if (/^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(iface.address)) {
+          return iface.address;
+        }
+      }
+    }
+  }
+  return 'localhost';
 }
 
 async function validateSupabaseStartup() {
