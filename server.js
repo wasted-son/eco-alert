@@ -9,7 +9,6 @@ require('dotenv').config({ path: path.resolve(__dirname, '.env'), override: true
 
 const express   = require('express');
 const cors      = require('cors');
-const rateLimit = require('express-rate-limit');
 
 const reportsRouter = require('./routes/reports');
 const adminRouter   = require('./routes/admin');
@@ -17,6 +16,12 @@ const weatherRouter = require('./routes/weather');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+// If deployed behind a proxy/load balancer, trust the first proxy.
+// This allows express-rate-limit to identify client IPs correctly.
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Common allowed HTTP methods for the API
 const ALLOWED_API_METHODS = ['GET', 'POST', 'PATCH', 'OPTIONS', 'PUT', 'DELETE', 'HEAD'];
@@ -44,17 +49,8 @@ app.options('*', cors());
 // Serve frontend files from public folder
 app.use(express.static('public'));
 
-// ── RATE LIMITING ─────────────────────────────────────────
-const submitLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 20,
-  message: { error: 'Too many reports. Please wait 10 minutes.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 // ── ROUTES ────────────────────────────────────────────────
-app.use('/api/reports', submitLimiter, reportsRouter);
+app.use('/api/reports', reportsRouter);
 app.use('/api/admin',   adminRouter);
 app.use('/api',         weatherRouter);
 

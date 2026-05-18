@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 // Fixed admin password (change in production)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'AdminPassword123!';
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_this';
 const TOKEN_EXPIRY = '24h';
 
