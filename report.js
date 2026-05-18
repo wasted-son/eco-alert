@@ -171,7 +171,11 @@ const ReportModule = (() => {
       let data = {};
       try {
         data = await res.json();
-      } catch (_) {
+      } catch (parseErr) {
+        const rawText = await res.text().catch(() => '');
+        if (rawText) {
+          throw new Error(`Server returned status ${res.status} with body: ${rawText}`);
+        }
         throw new Error(`Server returned status ${res.status} with no JSON body.`);
       }
 

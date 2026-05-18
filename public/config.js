@@ -38,9 +38,19 @@ let CONFIG = {
 
 // ── AUTO-DETECT API URL ON DEPLOYMENT ──────────────────
 // On production (not localhost), use the current domain as API base
-// This allows the app to work on any deployment without manual config changes
-if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-  CONFIG.API_BASE = `${window.location.protocol}//${window.location.host}`;
+// If the frontend is served from another port on a local/private LAN host,
+// assume the backend is still available on port 3000.
+const host = window.location.hostname;
+const isLocalhost = host === 'localhost' || host === '127.0.0.1';
+const isPrivateHost = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(host);
+const isHttpScheme = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+if (!isLocalhost && isHttpScheme) {
+  const backendPort = '3000';
+  if (isPrivateHost && window.location.port && window.location.port !== backendPort) {
+    CONFIG.API_BASE = `${window.location.protocol}//${host}:${backendPort}`;
+  } else {
+    CONFIG.API_BASE = `${window.location.protocol}//${window.location.host}`;
+  }
   console.log('[CONFIG] Using production API URL:', CONFIG.API_BASE);
 }
 
