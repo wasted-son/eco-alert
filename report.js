@@ -172,6 +172,7 @@ const ReportModule = (() => {
       try {
         data = await res.json();
       } catch (parseErr) {
+        console.error('Report submit non-JSON response:', res.status, await res.text().catch(() => '<no body>'));
         const rawText = await res.text().catch(() => '');
         if (rawText) {
           throw new Error(`Server returned status ${res.status} with body: ${rawText}`);
